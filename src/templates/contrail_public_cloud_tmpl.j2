@@ -10,8 +10,8 @@ resources:
         - public_cloud_credential
       name: public_cloud_credential
       parent_type: global-system-config
-      {% set cred_uuid = random_int(20) %}
-      uuid: {{ cred_uuid }}
+      {% set cred_uuid = random_int(30) %}
+      uuid: "{{ cred_uuid }}"
     kind: credential
     operation: CREATE
   - data:
@@ -19,19 +19,19 @@ resources:
         access_key: {{ global_config.aws_access_key }}
         secret_key: {{ global_config.aws_secret_key }}
       credential_refs:
-        - uuid: {{ cred_uuid }}
+        - uuid: "{{ cred_uuid }}"
       fq_name:
         - public_cloud_user
       name: public_cloud_user
       perms2:
         owner: admin
-      {% set cloud_user_uuid = random_int(20) %}
-      uuid: {{ cloud_user_uuid }}
+      {% set cloud_user_uuid = random_int(30) %}
+      uuid: "{{ cloud_user_uuid }}"
     kind: cloud_user
     operation: CREATE
   - data:
       cloud_user_refs:
-        - uuid: {{ cloud_user_uuid }}
+        - uuid: "{{ cloud_user_uuid }}"
       fq_name:
         - public_cloud
       name: public_cloud
@@ -40,8 +40,8 @@ resources:
         owner: admin
       project: "5.1"
       provisioning_state: NOSTATE
-      {% set cloud = random_int(20) %}
-      uuid: {{ cloud }}
+      {% set cloud = random_int(30) %}
+      uuid: "{{ cloud }}"
     kind: cloud
     operation: CREATE
 {% for provider in cloud_provider%}
@@ -67,7 +67,7 @@ resources:
       parent_type: cloud-provider
       perms2:
         owner: admin
-    kind: cloud_region_{{ region.name }}
+    kind: cloud_region
     operation: CREATE
 {% for vpcN in range(region.vpcs.num) %}
   - data:
@@ -76,8 +76,8 @@ resources:
       name: public_cloud_tag_{{ vpcN }}
       tag_type_name: label
       tag_value: public_cloud_provider_aws_{{ vpcN }}
-      {% set tag_uuid = random_int(20) %}
-      uuid: {{ tag_uuid }}
+      {% set tag_uuid = random_int(30) %}
+      uuid: "{{ tag_uuid }}"
     kind: tag
     operation: CREATE
   - data:
@@ -92,7 +92,7 @@ resources:
       perms2:
         owner: admin
       tag_refs:
-        - uuid: {{ tag_uuid }}
+        - uuid: "{{ tag_uuid }}"
     kind: virtual_cloud
     operation: CREATE
   - data:
@@ -108,8 +108,8 @@ resources:
       parent_type: virtual-cloud
       perms2:
         owner: admin
-      {% set vcloud_subnet_uuid = random_int(20) %}
-      uuid: {{ vcloud_subnet_uuid }}
+      {% set vcloud_subnet_uuid = random_int(30) %}
+      uuid: "{{ vcloud_subnet_uuid }}"
     kind: cloud_private_subnet
     operation: CREATE
   - data:
@@ -123,8 +123,8 @@ resources:
       parent_type: virtual-cloud
       perms2:
         owner: admin
-      {% set cloud_sg_uuid = random_int(20) %}
-      uuid: {{ cloud_sg_uuid }}
+      {% set cloud_sg_uuid = random_int(30) %}
+      uuid: "{{ cloud_sg_uuid }}"
     kind: cloud_security_group
     operation: CREATE
   - data:
@@ -175,11 +175,11 @@ resources:
         roles:
           - gateway
       cloud_private_subnet_refs:
-        - uuid: {{ vcloud_subnet_uuid }}
+        - uuid: "{{ vcloud_subnet_uuid }}"
       cloud_security_group_refs:
-        - uuid: {{ cloud_sg_uuid }}
+        - uuid: "{{ cloud_sg_uuid }}"
       credential_refs:
-        - uuid: {{ cred_uuid }}
+        - uuid: "{{ cred_uuid }}"
       fq_name:
         - default-global-system-config
         - public_gateway_node_1_vpc_{{ vpcN }}
@@ -189,7 +189,7 @@ resources:
       perms2:
         owner: admin
       tag_refs:
-        - uuid: {{ tag_uuid }}
+        - uuid: "{{ tag_uuid }}"
       type: private
     kind: node
     operation: CREATE
@@ -203,11 +203,11 @@ resources:
         roles:
           - gateway
       cloud_private_subnet_refs:
-        - uuid: {{ vcloud_subnet_uuid }}
+        - uuid: "{{ vcloud_subnet_uuid }}"
       cloud_security_group_refs:
-        - uuid: {{ cloud_sg_uuid }}
+        - uuid: "{{ cloud_sg_uuid }}"
       credential_refs:
-        - uuid: {{ cred_uuid }}
+        - uuid: "{{ cred_uuid }}"
       fq_name:
         - default-global-system-config
         - public_gateway_node_2_vpc_{{ vpcN }}
@@ -217,7 +217,7 @@ resources:
       perms2:
         owner: admin
       tag_refs:
-        - uuid: {{ tag_uuid }}
+        - uuid: "{{ tag_uuid }}"
       type: private
     kind: node
     operation: CREATE
@@ -231,11 +231,11 @@ resources:
         roles:
           - compute
       cloud_private_subnet_refs:
-        - uuid: {{ vcloud_subnet_uuid }}
+        - uuid: "{{ vcloud_subnet_uuid }}"
       cloud_security_group_refs:
-        - uuid: {{ cloud_sg_uuid }}
+        - uuid: "{{ cloud_sg_uuid }}"
       credential_refs:
-        - uuid: {{ cred_uuid }}
+        - uuid: "{{ cred_uuid }}"
       fq_name:
         - default-global-system-config
         - public_compute_node_1_vpc_{{ vpcN }}
@@ -245,7 +245,7 @@ resources:
       perms2:
         owner: admin
       tag_refs:
-        - uuid: {{ tag_uuid }}
+        - uuid: "{{ tag_uuid }}"
       type: private
     kind: node
     operation: CREATE
@@ -259,11 +259,11 @@ resources:
         roles:
           - compute
       cloud_private_subnet_refs:
-        - uuid: {{ vcloud_subnet_uuid }}
+        - uuid: "{{ vcloud_subnet_uuid }}"
       cloud_security_group_refs:
-        - uuid: {{ cloud_sg_uuid }}
+        - uuid: "{{ cloud_sg_uuid }}"
       credential_refs:
-        - uuid: {{ cred_uuid }}
+        - uuid: "{{ cred_uuid }}"
       fq_name:
         - default-global-system-config
         - public_compute_node_2_vpc_{{ vpcN }}
@@ -273,7 +273,7 @@ resources:
       perms2:
         owner: admin
       tag_refs:
-        - uuid: {{ tag_uuid }}
+        - uuid: "{{ tag_uuid }}"
       type: private
     kind: node
     operation: CREATE

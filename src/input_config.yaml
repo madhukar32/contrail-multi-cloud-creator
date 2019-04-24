@@ -4,11 +4,11 @@ global_config:
 cloud_provider:
   - name: aws
     regions:
-      - name: us-west
+      - name: us-west-1
         vpcs:
-          num: 5
+          num: 1
           instances:
             cloudInfo:
-              availability_zone: A
+              availability_zone: a
               operating_system: rhel75
               instance_type: t2.xlarge
