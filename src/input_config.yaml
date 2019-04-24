@@ -1,0 +1,14 @@
+global_config:
+  aws_access_key: hello123
+  aws_secret_key: hello23456
+cloud_provider:
+  - name: aws
+    regions:
+      - name: us-west
+        vpcs:
+          num: 5
+          instances:
+            cloudInfo:
+              availability_zone: A
+              operating_system: rhel75
+              instance_type: t2.xlarge

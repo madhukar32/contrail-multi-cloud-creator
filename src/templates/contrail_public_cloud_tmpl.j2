@@ -1,0 +1,282 @@
+{% macro random_int(len) -%}
+  {% for n in range(len) %}{{ [0,1,2,3,4,5,6,7,8,9]|random }}{% endfor %}
+{%- endmacro %}
+
+---
+resources:
+  - data:
+      fq_name:
+        - default-global-system-config
+        - public_cloud_credential
+      name: public_cloud_credential
+      parent_type: global-system-config
+      {% set cred_uuid = random_int(20) %}
+      uuid: {{ cred_uuid }}
+    kind: credential
+    operation: CREATE
+  - data:
+      aws_credential:
+        access_key: {{ global_config.aws_access_key }}
+        secret_key: {{ global_config.aws_secret_key }}
+      credential_refs:
+        - uuid: {{ cred_uuid }}
+      fq_name:
+        - public_cloud_user
+      name: public_cloud_user
+      perms2:
+        owner: admin
+      {% set cloud_user_uuid = random_int(20) %}
+      uuid: {{ cloud_user_uuid }}
+    kind: cloud_user
+    operation: CREATE
+  - data:
+      cloud_user_refs:
+        - uuid: {{ cloud_user_uuid }}
+      fq_name:
+        - public_cloud
+      name: public_cloud
+      organization: test
+      perms2:
+        owner: admin
+      project: "5.1"
+      provisioning_state: NOSTATE
+      {% set cloud = random_int(20) %}
+      uuid: {{ cloud }}
+    kind: cloud
+    operation: CREATE
+{% for provider in cloud_provider%}
+  - data:
+      fq_name:
+        - public_cloud
+        - public_cloud_provider_{{ provider.name }}
+      name: public_cloud_provider_{{ provider.name }}
+      parent_type: cloud
+      perms2:
+        owner: admin
+      type: {{ provider.name }}
+    kind: cloud_provider
+    operation: CREATE
+{% for region in provider.regions %}
+  - data:
+      name: public_cloud_region_{{ region.name }}
+      fq_name:
+        - public_cloud
+        - public_cloud_provider_{{ provider.name }}
+        - public_cloud_region_{{ region.name }}
+      display_name: {{ region.name }}
+      parent_type: cloud-provider
+      perms2:
+        owner: admin
+    kind: cloud_region_{{ region.name }}
+    operation: CREATE
+{% for vpcN in range(region.vpcs.num) %}
+  - data:
+      fq_name:
+        - public_cloud_tag_{{ vpcN }}
+      name: public_cloud_tag_{{ vpcN }}
+      tag_type_name: label
+      tag_value: public_cloud_provider_aws_{{ vpcN }}
+      {% set tag_uuid = random_int(20) %}
+      uuid: {{ tag_uuid }}
+    kind: tag
+    operation: CREATE
+  - data:
+      cidr_block: 192.168.{{ vpcN }}.0/24
+      fq_name:
+        - public_cloud
+        - public_cloud_provider_{{ provider.name }}
+        - public_cloud_region_{{ region.name }}
+        - publc_virtual_cloud_{{ vpcN }}
+      name: publc_virtual_cloud_{{ vpcN }}
+      parent_type: cloud-region
+      perms2:
+        owner: admin
+      tag_refs:
+        - uuid: {{ tag_uuid }}
+    kind: virtual_cloud
+    operation: CREATE
+  - data:
+      availability_zone: a
+      cidr_block: 192.168.{{ vpcN }}.128/25
+      fq_name:
+        - public_cloud
+        - public_cloud_provider_{{ provider.name }}
+        - public_cloud_region_{{ region.name }}
+        - publc_virtual_cloud_{{ vpcN }}
+        - public_cloud_private_subnet_{{ vpcN }}
+      name: public_cloud_private_subnet_{{ vpcN }}
+      parent_type: virtual-cloud
+      perms2:
+        owner: admin
+      {% set vcloud_subnet_uuid = random_int(20) %}
+      uuid: {{ vcloud_subnet_uuid }}
+    kind: cloud_private_subnet
+    operation: CREATE
+  - data:
+      fq_name:
+        - public_cloud
+        - public_cloud_provider_{{ provider.name }}
+        - public_cloud_region_{{ region.name }}
+        - publc_virtual_cloud_{{ vpcN }}
+        - public_cloud_security_group_{{ vpcN }}
+      name: public_cloud_security_group_{{ vpcN }}
+      parent_type: virtual-cloud
+      perms2:
+        owner: admin
+      {% set cloud_sg_uuid = random_int(20) %}
+      uuid: {{ cloud_sg_uuid }}
+    kind: cloud_security_group
+    operation: CREATE
+  - data:
+      cidr_block: 0.0.0.0/0
+      direction: ingress
+      fq_name:
+        - public_cloud
+        - public_cloud_provider_{{ provider.name }}
+        - public_cloud_region_{{ region.name }}
+        - publc_virtual_cloud_{{ vpcN }}
+        - public_cloud_security_group_{{ vpcN }}
+        - public_cloud_security_group_rule_ingress_{{ vpcN }}
+      from_port: 0
+      name: public_cloud_security_group_rule_ingress_{{ vpcN }}
+      parent_type: cloud-security-group
+      perms2:
+        owner: admin
+      protocol: "-1"
+      to_port: 0
+    kind: cloud_security_group_rule
+    operation: CREATE
+  - data:
+      cidr_block: 0.0.0.0/0
+      direction: egress
+      fq_name:
+        - public_cloud
+        - public_cloud_provider_{{ provider.name }}
+        - public_cloud_region_{{ region.name }}
+        - publc_virtual_cloud_{{ vpcN }}
+        - public_cloud_security_group_{{ vpcN }}
+        - public_cloud_security_group_rule_egress_{{ vpcN }}
+      from_port: 0
+      name: public_cloud_security_group_rule_egress_{{ vpcN }}
+      parent_type: cloud-security-group
+      perms2:
+        owner: admin
+      protocol: "-1"
+      to_port: 0
+    kind: cloud_security_group_rule
+    operation: CREATE
+  - data:
+      cloud_info:
+        {% if region.vpcs.instances.cloudInfo.availability_zone %}
+        availability_zone: {{ region.vpcs.instances.cloudInfo.availability_zone }}
+        {% endif %}
+        instance_type: {{ region.vpcs.instances.cloudInfo.instance_type }}
+        operating_system: {{ region.vpcs.instances.cloudInfo.operating_system }}
+        roles:
+          - gateway
+      cloud_private_subnet_refs:
+        - uuid: {{ vcloud_subnet_uuid }}
+      cloud_security_group_refs:
+        - uuid: {{ cloud_sg_uuid }}
+      credential_refs:
+        - uuid: {{ cred_uuid }}
+      fq_name:
+        - default-global-system-config
+        - public_gateway_node_1_vpc_{{ vpcN }}
+      hostname: gateway-1-vpc-{{ vpcN }}
+      name: public_gateway_node_1_vpc_{{ vpcN }}
+      parent_type: global-system-config
+      perms2:
+        owner: admin
+      tag_refs:
+        - uuid: {{ tag_uuid }}
+      type: private
+    kind: node
+    operation: CREATE
+  - data:
+      cloud_info:
+        {% if region.vpcs.instances.cloudInfo.availability_zone %}
+        availability_zone: {{ region.vpcs.instances.cloudInfo.availability_zone }}
+        {% endif %}
+        instance_type: {{ region.vpcs.instances.cloudInfo.instance_type }}
+        operating_system: {{ region.vpcs.instances.cloudInfo.operating_system }}
+        roles:
+          - gateway
+      cloud_private_subnet_refs:
+        - uuid: {{ vcloud_subnet_uuid }}
+      cloud_security_group_refs:
+        - uuid: {{ cloud_sg_uuid }}
+      credential_refs:
+        - uuid: {{ cred_uuid }}
+      fq_name:
+        - default-global-system-config
+        - public_gateway_node_2_vpc_{{ vpcN }}
+      hostname: gateway-2-vpc-{{ vpcN }}
+      name: public_gateway_node_2_vpc_{{ vpcN }}
+      parent_type: global-system-config
+      perms2:
+        owner: admin
+      tag_refs:
+        - uuid: {{ tag_uuid }}
+      type: private
+    kind: node
+    operation: CREATE
+  - data:
+      cloud_info:
+        {% if region.vpcs.instances.cloudInfo.availability_zone %}
+        availability_zone: {{ region.vpcs.instances.cloudInfo.availability_zone }}
+        {% endif %}
+        instance_type: {{ region.vpcs.instances.cloudInfo.instance_type }}
+        operating_system: {{ region.vpcs.instances.cloudInfo.operating_system }}
+        roles:
+          - compute
+      cloud_private_subnet_refs:
+        - uuid: {{ vcloud_subnet_uuid }}
+      cloud_security_group_refs:
+        - uuid: {{ cloud_sg_uuid }}
+      credential_refs:
+        - uuid: {{ cred_uuid }}
+      fq_name:
+        - default-global-system-config
+        - public_compute_node_1_vpc_{{ vpcN }}
+      hostname: compute-1-vpc-{{ vpcN }}
+      name: public_compute_node_1_vpc_{{ vpcN }}
+      parent_type: global-system-config
+      perms2:
+        owner: admin
+      tag_refs:
+        - uuid: {{ tag_uuid }}
+      type: private
+    kind: node
+    operation: CREATE
+  - data:
+      cloud_info:
+        {% if region.vpcs.instances.cloudInfo.availability_zone %}
+        availability_zone: {{ region.vpcs.instances.cloudInfo.availability_zone }}
+        {% endif %}
+        instance_type: {{ region.vpcs.instances.cloudInfo.instance_type }}
+        operating_system: {{ region.vpcs.instances.cloudInfo.operating_system }}
+        roles:
+          - compute
+      cloud_private_subnet_refs:
+        - uuid: {{ vcloud_subnet_uuid }}
+      cloud_security_group_refs:
+        - uuid: {{ cloud_sg_uuid }}
+      credential_refs:
+        - uuid: {{ cred_uuid }}
+      fq_name:
+        - default-global-system-config
+        - public_compute_node_2_vpc_{{ vpcN }}
+      hostname: compute-2-vpc-{{ vpcN }}
+      name: public_compute_node_2_vpc_{{ vpcN }}
+      parent_type: global-system-config
+      perms2:
+        owner: admin
+      tag_refs:
+        - uuid: {{ tag_uuid }}
+      type: private
+    kind: node
+    operation: CREATE
+{% endfor %}
+{% endfor %}
+{% endfor %}
